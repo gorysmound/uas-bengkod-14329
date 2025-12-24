@@ -1,37 +1,31 @@
 import streamlit as st
-import sklearn
+import pandas as pd
 import joblib
-import pandas
 
-
-
-# 1. Load Model Terbaik [cite: 93]
-# Pastikan file .pkl berada satu folder dengan app.py saat dideploy
+# Load Model
 model = joblib.load('model_churn_terbaik.pkl')
 
-# Judul Aplikasi
+# Judul
 st.title("Telco Customer Churn Prediction")
-st.write("Aplikasi ini memprediksi apakah pelanggan berpotensi berhenti berlangganan (Churn) berdasarkan data profil mereka.")
 
-# 2. Form Input Fitur [cite: 94]
-# Kita bagi menjadi dua kolom agar tampilan lebih rapi
+# Input Data
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Data Demografis")
+    st.subheader("Data Pribadi")
     gender = st.selectbox("Gender", ["Male", "Female"])
-    senior_citizen = st.selectbox("Senior Citizen (Lansia)", [0, 1], format_func=lambda x: "Ya" if x == 1 else "Tidak")
-    partner = st.selectbox("Memiliki Pasangan (Partner)", ["Yes", "No"])
-    dependents = st.selectbox("Memiliki Tanggungan (Dependents)", ["Yes", "No"])
+    senior_citizen = st.selectbox("Senior Citizen", [0, 1])
+    partner = st.selectbox("Partner", ["Yes", "No"])
+    dependents = st.selectbox("Dependents", ["Yes", "No"])
+    tenure = st.number_input("Lama Langganan (Bulan)", 0, 100, 12)
 
-    st.subheader("Informasi Layanan")
-    tenure = st.number_input("Lama Berlangganan (Bulan)", min_value=0, value=12)
-    phone_service = st.selectbox("Layanan Telepon", ["Yes", "No"])
+    st.subheader("Layanan Telepon")
+    phone_service = st.selectbox("Phone Service", ["Yes", "No"])
     multiple_lines = st.selectbox("Multiple Lines", ["No phone service", "No", "Yes"])
-    internet_service = st.selectbox("Jenis Internet", ["DSL", "Fiber optic", "No"])
 
 with col2:
-    st.subheader("Fitur Tambahan")
+    st.subheader("Layanan Internet")
+    internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
     online_security = st.selectbox("Online Security", ["No internet service", "No", "Yes"])
     online_backup = st.selectbox("Online Backup", ["No internet service", "No", "Yes"])
     device_protection = st.selectbox("Device Protection", ["No internet service", "No", "Yes"])
@@ -40,17 +34,15 @@ with col2:
     streaming_movies = st.selectbox("Streaming Movies", ["No internet service", "No", "Yes"])
 
     st.subheader("Pembayaran")
-    contract = st.selectbox("Kontrak", ["Month-to-month", "One year", "Two year"])
-    paperless_billing = st.selectbox("Tagihan Tanpa Kertas", ["Yes", "No"])
-    payment_method = st.selectbox("Metode Pembayaran", [
-        "Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"
-    ])
-    monthly_charges = st.number_input("Biaya Bulanan (Monthly Charges)", min_value=0.0, value=50.0)
-    total_charges = st.number_input("Total Biaya (Total Charges)", min_value=0.0, value=500.0)
+    contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
+    paperless_billing = st.selectbox("Paperless Billing", ["Yes", "No"])
+    payment_method = st.selectbox("Payment Method", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+    monthly_charges = st.number_input("Biaya Bulanan", 0.0, 1000.0, 50.0)
+    total_charges = st.number_input("Total Biaya", 0.0, 10000.0, 500.0)
 
-# 3. Proses Prediksi [cite: 95]
+# Tombol Prediksi
 if st.button("Prediksi Churn"):
-    # Menyusun data input ke dalam DataFrame sesuai urutan training
+    # Bikin DataFrame dari input
     input_data = pd.DataFrame({
         'gender': [gender],
         'SeniorCitizen': [senior_citizen],
@@ -72,22 +64,11 @@ if st.button("Prediksi Churn"):
         'MonthlyCharges': [monthly_charges],
         'TotalCharges': [total_charges]
     })
-
-    try:
-        # Melakukan prediksi
-        prediction = model.predict(input_data)[0]
-        probability = model.predict_proba(input_data)[0][1]
-
-        # 4. Tampilan Hasil Prediksi [cite: 96]
-        st.write("---")
-        if prediction == 1:
-            st.error(f"⚠️ **Hasil: CHURN (Berhenti Berlangganan)**")
-            st.write(f"Probabilitas pelanggan ini akan pergi: **{probability:.2%}**")
-            st.write("Saran: Tawarkan diskon atau promosi khusus untuk mempertahankan pelanggan ini.")
-        else:
-            st.success(f"✅ **Hasil: TIDAK CHURN (Tetap Berlangganan)**")
-            st.write(f"Probabilitas pelanggan ini akan pergi: **{probability:.2%}**")
-            st.write("Pelanggan ini tampaknya setia.")
-
-    except Exception as e:
-        st.error(f"Terjadi kesalahan saat memproses data: {e}")
+    
+    # Prediksi
+    prediction = model.predict(input_data)
+    
+    if prediction[0] == 1:
+        st.error("Prediksi: CHURN (Akan Berhenti)")
+    else:
+        st.success("Prediksi: TIDAK CHURN (Aman)")
