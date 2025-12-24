@@ -3,9 +3,7 @@ import sklearn
 import joblib
 import pandas
 
-print(f"scikit-learn=={sklearn.__version__}")
-print(f"joblib=={joblib.__version__}")
-print(f"pandas=={pandas.__version__}")
+
 
 # 1. Load Model Terbaik [cite: 93]
 # Pastikan file .pkl berada satu folder dengan app.py saat dideploy
